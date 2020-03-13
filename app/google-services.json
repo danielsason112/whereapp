@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "871817597792",
+    "firebase_url": "https://whereapp-298c2.firebaseio.com",
+    "project_id": "whereapp-298c2",
+    "storage_bucket": "whereapp-298c2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:871817597792:android:b1f006eb254cd3d43d4405",
+        "android_client_info": {
+          "package_name": "com.afeka.whereapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "871817597792-ihil443bu6ghb3hgenlqu26tsi3prahm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.afeka.whereapp",
+            "certificate_hash": "83b1afbadd921769bfdbe8a14b00cb77577e93e8"
+          }
+        },
+        {
+          "client_id": "871817597792-eikb782q2oes6unh5dii5icbjheg4j65.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCd-hCK3GhKMK5iEncu40lrlCGrfcdKPzg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "871817597792-eikb782q2oes6unh5dii5icbjheg4j65.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

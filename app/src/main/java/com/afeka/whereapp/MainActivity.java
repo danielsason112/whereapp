@@ -118,15 +118,14 @@ public class MainActivity extends AppCompatActivity {
                         registerUser(user);
                     } else {
                         currentUser = dbUser;
+                        if (currentUser.getGroups() != null) {
+                            subscribeToUserGroups();
+                        }
                     }
                     // Get Firebase Cloud Messaging token
                     messagingService.getToken(user.getUid());
 
-                    chatFragment.updateUserName(dbUser.getName());
-
-                    if (currentUser.getGroups() != null) {
-                        subscribeToUserGroups();
-                    }
+                    chatFragment.updateUserName(user.getDisplayName());
 
                     loadGroups();
                 }
@@ -181,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void registerToGroup(String groupId) {
         if (currentUser != null) {
-            messagingService.subscribeToGroup(currentUser.getName(), groupId);
+            messagingService.subscribeToGroup(currentUser.getId(), groupId);
             currentUser.addGroup(groupId);
         }
     }
@@ -226,6 +225,9 @@ public class MainActivity extends AppCompatActivity {
             public void onData(User data) {
                 currentUser = data;
                 Log.d(TAG, "Created a new user in db: " + user.toString());
+                if (currentUser.getGroups() != null) {
+                    subscribeToUserGroups();
+                }
             }
 
             @Override
@@ -238,11 +240,11 @@ public class MainActivity extends AppCompatActivity {
     private void subscribeToUserGroups() {
         final Context context = this;
         for (String key : currentUser.getGroups().keySet()) {
+            messagingService.subscribeToGroup(currentUser.getId(), key);
             dataService.getGroupById(key, new OnResponse<Group>() {
                 @Override
                 public void onData(Group data) {
                     chatFragment.addGroup(context, data);
-                    messagingService.subscribeToGroup(currentUser.getId(), data.getId());
                 }
 
                 @Override
@@ -266,5 +268,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, msg);
             }
         });
+    }
+
+    public void addGroupToChatList(Group group) {
+        chatFragment.addGroup(this, group);
     }
 }

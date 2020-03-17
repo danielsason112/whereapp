@@ -24,8 +24,8 @@ import co.intentservice.chatui.models.ChatMessage;
 
 public class ChatActivity extends AppCompatActivity {
 
-    public final String GROUP_ID_EXTRA = "group_id";
-    public final String USER_NAME_EXTRA = "user_name";
+    public static final String GROUP_ID_EXTRA = "group_id";
+    public static final String USER_NAME_EXTRA = "user_name";
 
     private ChatView chatView;
     private String groupId;

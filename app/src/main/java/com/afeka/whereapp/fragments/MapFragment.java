@@ -112,6 +112,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                         if (!isInGroup) {
                             ((MainActivity)getActivity()).registerToGroup(group.getId());
                             joinGroupButton.setText(LEAVE_GROUP_BUTTON_TEXT);
+                            ((MainActivity)getActivity()).addGroupToChatList(group);
                         }
                     }
                 });

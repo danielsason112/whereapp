@@ -1,9 +1,7 @@
-package com.afeka.whereapp;
+package com.afeka.whereapp.logic;
 
 import android.app.Activity;
-import android.content.Context;
 import android.location.Location;
-import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;

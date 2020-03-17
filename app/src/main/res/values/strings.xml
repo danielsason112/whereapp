@@ -8,4 +8,10 @@
     <string name="group_name_placeholder">group name</string>
     <string name="create_group">Create Group</string>
     <string name="logout">Sign out</string>
+    <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
+    <string name="add_group">Add Group</string>
+    <string name="group_info">Group Info:</string>
+    <string name="description">Description:</string>
+    <string name="group_description_placeholder">description</string>
+    <string name="your_groups_chats">Your Groups Chats</string>
 </resources>

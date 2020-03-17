@@ -28,8 +28,23 @@ public class FirebaseGroupDao implements GroupDao {
     }
 
     @Override
-    public void readAll(final OnResponse res) {
+    public void readAll(final OnResponse<DataSnapshot> res) {
         this.dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                res.onData(dataSnapshot);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                res.onError(databaseError.getDetails());
+            }
+        });
+    }
+
+    @Override
+    public void readById(String id, final OnResponse<DataSnapshot> res) {
+        this.dbRef.child(id).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 res.onData(dataSnapshot);

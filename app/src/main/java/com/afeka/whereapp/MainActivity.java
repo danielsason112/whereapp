@@ -1,11 +1,9 @@
 package com.afeka.whereapp;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -13,118 +11,85 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
+import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.viewpager.widget.ViewPager;
+
+import com.afeka.whereapp.adapters.TabAdapter;
 import com.afeka.whereapp.dao.OnResponse;
-import com.afeka.whereapp.dao.firebase.FirebaseUserDao;
-import com.afeka.whereapp.data.util.EntityFactory;
-import com.firebase.ui.auth.AuthUI;
-import com.google.firebase.auth.FirebaseAuth;
+import com.afeka.whereapp.data.Group;
+import com.afeka.whereapp.data.User;
+import com.afeka.whereapp.fragments.ChatFragment;
+import com.afeka.whereapp.fragments.ListFragment;
+import com.afeka.whereapp.fragments.MapFragment;
+import com.afeka.whereapp.logic.AuthService;
+import com.afeka.whereapp.logic.DataService;
+import com.afeka.whereapp.logic.LocationService;
+import com.afeka.whereapp.logic.MessagingService;
+import com.afeka.whereapp.logic.OnLocationResult;
+import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
 
-import java.util.Arrays;
 import java.util.List;
-
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int RC_SIGN_IN = 123;
-    private final String USER_ID_EXTRA = "user_id";
-    private final String LOCATION_EXTRA = "location";
+    public static final String LOCATION_EXTRA = "location";
 
-    private FragmentManager fragmentManager;
+    private static final int RC_SIGN_IN = 123;
+    private static final String TAG = "MainActivity";
+    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 23;
+
+    private final String MAP_FRAGMENT_TITLE = "Map";
+    private final String LIST_FRAGMENT_TITLE = "List";
+    private final String CHAT_FRAGMENT_TITLE = "Chats";
+    private final double DEFAULT_LOCATION_LAT = 32.115115;
+    private final double DEFAULT_LOCATION_LNG = 34.817933;
+
+    private LocationService locationService;
+    private MessagingService messagingService;
+    private AuthService authService;
+    private DataService dataService;
+
+    private TabAdapter adapter;
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
+
     private Location currentLocation;
-    private FirebaseUser currentUser;
+    private User currentUser;
+
+    private MapFragment mapFragment;
+    private ListFragment listFragment;
+    private ChatFragment chatFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        messagingService = new MessagingService();
+        authService = new AuthService();
+        dataService = new DataService(this);
+        locationService = new LocationService(this);
+
+        mapFragment = new MapFragment();
+        listFragment = new ListFragment();
+        chatFragment = new ChatFragment();
 
         currentLocation = new Location(LocationManager.GPS_PROVIDER);
-        currentLocation.setLatitude(23.5678);
-        currentLocation.setLongitude(34.456);
-        fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        currentLocation.setLatitude(DEFAULT_LOCATION_LAT);
+        currentLocation.setLongitude(DEFAULT_LOCATION_LNG);
 
-        final MapFragment fragment = new MapFragment();
-        fragmentTransaction.add(R.id.fragment_container, fragment);
-        fragmentTransaction.commit();
-
-        LocationService locationService = new LocationService(this);
-        locationService.getCurrentLocation(this, new OnLocationResult() {
-            @Override
-            public void onLocationFound(Location location) {
-                currentLocation = new Location(location);
-            }
-
-            @Override
-            public void onError(String msg) {
-                return;
-            }
-        });
-
-        findViewById(R.id.add_group_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), AddGroupActivity.class);
-                intent.putExtra(LOCATION_EXTRA, currentLocation);
-                //intent.putExtra(USER_ID_EXTRA, currentUser.getUid());
-                startActivity(intent);
-            }
-        });
-
-        findViewById(R.id.map_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showFragment(new MapFragment());
-            }
-        });
-
-        findViewById(R.id.list_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showFragment(new ListFragment());
-            }
-        });
-
-        findViewById(R.id.chat_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showFragment(new ChatFragment());
-            }
-        });
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        // User is logged in
-        if (user != null) {
-            final FirebaseUserDao firebaseUserDao = new FirebaseUserDao();
-
-            firebaseUserDao.getUserById(user.getUid(), new OnResponse<DataSnapshot>() {
-                @Override
-                public void onData(DataSnapshot data) {
-                    Log.d("login", data.toString());
-                    // User doesn't exists in the db
-                    if (data.getValue() == null) {
-                        EntityFactory entityFactory = new EntityFactory();
-                        firebaseUserDao.create(entityFactory.createNewUser(user.getUid(), user.getDisplayName(), user.getEmail()));
-                    }
-                }
-
-                @Override
-                public void onError(String msg) {
-                    Log.e("login", msg);
-                }
-            });
-        } else {
-            startAuthActivity();
-        }
+        viewPager = findViewById(R.id.viewPager);
+        tabLayout = findViewById(R.id.tabLayout);
+        adapter = new TabAdapter(getSupportFragmentManager());
+        adapter.addFragment(mapFragment, MAP_FRAGMENT_TITLE);
+        adapter.addFragment(listFragment, LIST_FRAGMENT_TITLE);
+        adapter.addFragment(chatFragment, CHAT_FRAGMENT_TITLE);
+        viewPager.setAdapter(adapter);
+        tabLayout.setupWithViewPager(viewPager);
     }
 
     @Override
@@ -135,36 +100,171 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+        checkForPermissions();
+        updateCurrentLocation();
+
+        final FirebaseUser user = authService.getFirebaseCurrentUser();
+        final Context context = this;
+        // User is signed in
+        if (user != null) {
+            dataService.getDatabaseUser(user.getUid(), new OnResponse<User>() {
+                @Override
+                public void onData(final User dbUser) {
+                    // User not created in db
+                    if (dbUser == null) {
+                        registerUser(user);
+                    } else {
+                        currentUser = dbUser;
+                    }
+                    // Get Firebase Cloud Messaging token
+                    messagingService.getToken(user.getUid());
+
+                    chatFragment.updateUserName(dbUser.getName());
+
+                    if (currentUser.getGroups() != null) {
+                        subscribeToUserGroups();
+                    }
+
+                    loadGroups();
+                }
+
+                @Override
+                public void onError(String msg) {
+                    Log.e(TAG, msg);
+                }
+            });
+        } else {
+            Toast.makeText(this, "Please sign in or sign up", Toast.LENGTH_LONG).show();
+            startActivityForResult(authService.getSignInIntent(), RC_SIGN_IN);
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.logout:
-                FirebaseAuth.getInstance().signOut();
-                startAuthActivity();
+                authService.signOut();
+                startActivityForResult(authService.getSignInIntent(), RC_SIGN_IN);
+                return true;
+            case R.id.new_group:
+                Intent intent = new Intent(this, AddGroupActivity.class);
+                intent.putExtra(LOCATION_EXTRA, currentLocation);
+                startActivity(intent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    public void startAuthActivity() {
-        List<AuthUI.IdpConfig> providers = Arrays.asList(
-                new AuthUI.IdpConfig.EmailBuilder().build(),
-                new AuthUI.IdpConfig.PhoneBuilder().build());
-
-        // Create and launch sign-in intent
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setAvailableProviders(providers)
-                        .build(),
-                RC_SIGN_IN);
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_READ_CONTACTS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    updateCurrentLocation();
+                } else {
+                    // No Location permissions, set current location to a default value
+                    currentLocation = new Location(LocationManager.GPS_PROVIDER);
+                    currentLocation.setLatitude(DEFAULT_LOCATION_LAT);
+                    currentLocation.setLongitude(DEFAULT_LOCATION_LNG);
+                }
+                return;
+            }
+        }
     }
 
-    public void showFragment(Fragment f) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+    public void registerToGroup(String groupId) {
+        if (currentUser != null) {
+            messagingService.subscribeToGroup(currentUser.getName(), groupId);
+            currentUser.addGroup(groupId);
+        }
+    }
 
-        fragmentTransaction.replace(R.id.fragment_container, f);
-        fragmentTransaction.commit();
+    public boolean isUserInGroup(String groupId) {
+        if (currentUser.getGroups() == null) {
+            return false;
+        }
+        return currentUser.getGroups().containsKey(groupId);
+    }
+
+    public Location getCurrentLocation() {
+        return currentLocation;
+    }
+
+    private void checkForPermissions() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+    }
+
+    private void updateCurrentLocation() {
+        locationService.getCurrentLocation(this, new OnLocationResult() {
+            @Override
+            public void onLocationFound(Location location) {
+                if (location != null) {
+                    currentLocation = new Location(location);
+                }
+                mapFragment.zoomToCurrentLocation(currentLocation);
+            }
+
+            @Override
+            public void onError(String msg) {
+                return;
+            }
+        });
+    }
+
+    private void registerUser(final FirebaseUser user) {
+        dataService.registerNewUser(user.getUid(), user.getDisplayName(), user.getEmail(), new OnResponse<User>() {
+            @Override
+            public void onData(User data) {
+                currentUser = data;
+                Log.d(TAG, "Created a new user in db: " + user.toString());
+            }
+
+            @Override
+            public void onError(String msg) {
+                Log.e(TAG, msg);
+            }
+        });
+    }
+
+    private void subscribeToUserGroups() {
+        final Context context = this;
+        for (String key : currentUser.getGroups().keySet()) {
+            dataService.getGroupById(key, new OnResponse<Group>() {
+                @Override
+                public void onData(Group data) {
+                    chatFragment.addGroup(context, data);
+                    messagingService.subscribeToGroup(currentUser.getId(), data.getId());
+                }
+
+                @Override
+                public void onError(String msg) {
+                    Log.e(TAG, msg);
+                }
+            });
+        }
+    }
+
+    private void loadGroups() {
+        dataService.getGroups(new OnResponse<List<Group>>() {
+            @Override
+            public void onData(List<Group> data) {
+                mapFragment.addGroupsToMap(data);
+                listFragment.addGroupsToList(data);
+            }
+
+            @Override
+            public void onError(String msg) {
+                Log.e(TAG, msg);
+            }
+        });
     }
 }

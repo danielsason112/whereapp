@@ -5,24 +5,36 @@ import com.afeka.whereapp.data.IdGenerator;
 import com.afeka.whereapp.data.Location;
 import com.afeka.whereapp.data.User;
 
-import java.util.ArrayList;
+import java.util.Map;
 
 public class EntityFactory {
 
     // Create a new Group entity. Passing a null id will Generate a new id
-    public Group createNewGroup(String id, String name, double lat, double lng) {
+    public Group createNewGroup(String id, String name, double lat, double lng, String description) {
         if (id == null) {
             id = IdGenerator.generateId();
         }
 
-        return new Group(id, name, new Location(lat, lng));
+        return new Group(id, name, new Location(lat, lng), description);
     }
 
-    public User createNewUser(String id, String name, String email, String... groups) {
-        ArrayList<String> list = new ArrayList<String>();
-        for (String g : groups) {
-            list.add(g);
+    public Group createNewGroup(String id, Group group) {
+        if (group == null) {
+            return null;
         }
-        return new User(id, name, email, list);
+        group.setId(id);
+        return group;
+    }
+
+    public User createNewUser(String id, String name, String email, Map<String, Boolean> groups, String token) {
+        return new User(id, name, email, groups, token);
+    }
+
+    public User createNewUser(String id, User user) {
+        if (user == null) {
+            return null;
+        }
+        user.setId(id);
+        return user;
     }
 }

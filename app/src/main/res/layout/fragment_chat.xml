@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout android:id="@+id/chat_fragment_layout"
+    android:layout_height="wrap_content"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ChatFragment">
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Chat Fragment" />
+        android:layout_height="wrap_content"
+        android:text="@string/your_groups_chats"
+        android:textSize="30dp"
+        android:layout_margin="10dp"/>
 
-</FrameLayout>
+</LinearLayout>

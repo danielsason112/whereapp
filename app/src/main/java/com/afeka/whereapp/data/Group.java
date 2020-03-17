@@ -9,14 +9,16 @@ public class Group {
     private String id;
     private String name;
     private Location location;
+    private String description;
 
     public Group() {
     }
 
-    public Group(String id, String name, Location location) {
+    public Group(String id, String name, Location location, String description) {
         this.id = id;
         this.name = name;
         this.location = location;
+        this.description = description;
     }
 
     @Exclude
@@ -42,6 +44,14 @@ public class Group {
 
     public void setLocation(Location location) {
         this.location = location;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @NonNull

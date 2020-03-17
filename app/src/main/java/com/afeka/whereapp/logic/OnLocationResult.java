@@ -1,4 +1,4 @@
-package com.afeka.whereapp;
+package com.afeka.whereapp.logic;
 
 import android.location.Location;
 
